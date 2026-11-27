@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: eva_art_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-eva_art_db}
+      POSTGRES_USER: ${DB_USER:-eva_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-eva_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-eva_user} -d ${DB_NAME:-eva_art_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eva_network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: eva_art_app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    networks:
+      - eva_network
+
+volumes:
+  postgres_data:
+    name: eva_art_postgres_data
+
+networks:
+  eva_network:
+    name: eva_art_network
+    driver: bridge

@@ -1,0 +1,17 @@
+.env
+.env.local
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+postgres_data/
+venv/
+.venv/
+env/
+.idea/
+.vscode/
+*.log
+export_*.xlsx
+export_*.csv
+liquid-glass-kit.zip
+liquid-glass-kit-extracted/

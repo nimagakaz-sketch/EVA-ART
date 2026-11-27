@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>Автоковрики EVA-ART — Кемерово</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- Ambient Glows -->
+  <div class="ambient-glow" aria-hidden="true">
+    <i></i><i></i><i></i>
+  </div>
+
+  <!-- Toast Message -->
+  <div class="toast-msg" id="toast"></div>
+
+  <!-- Main Views Container -->
+  <main class="views-wrapper">
+
+    <!-- ==============================================
+         VIEW 1: КАЛЬКУЛЯТОР И ЗАКАЗ (CONFIGURATOR)
+         ============================================== -->
+    <section class="view active" id="v-calc">
+      <div class="header-brand">
+        <div class="badge-city">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          Кемерово · Бокс №3
+        </div>
+        <h1 class="brand-title">Автоковрики EVA-ART</h1>
+        <p class="brand-slogan">«Если ЕВА коврики, то EVA-ART»</p>
+      </div>
+
+      <!-- Car Selection Card -->
+      <div class="scard">
+        <div class="schd">
+          <span class="schd-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9C2.1 11.1 2 11.5 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+            1. Ваш автомобиль
+          </span>
+        </div>
+        <div class="scb">
+          <div class="form-group">
+            <label class="form-label">Марка авто</label>
+            <input type="text" id="car-make" class="input-text" placeholder="Например: Toyota, Haval, Lada" value="Toyota">
+          </div>
+          <div class="input-row">
+            <div class="form-group">
+              <label class="form-label">Модель</label>
+              <input type="text" id="car-model" class="input-text" placeholder="Camry, Jolion, Vesta" value="Camry">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Год выпуска</label>
+              <input type="text" id="car-year" class="input-text" placeholder="2020" value="2020">
+            </div>
+          </div>
+          <div id="pattern-badge" class="pattern-badge ready">
+            <span id="pattern-badge-icon" class="pattern-badge-icon">✅</span>
+            <span id="pattern-badge-text">Есть готовые лекала (изготовление без замера)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Interactive Mat Diagram Preview -->
+      <div class="mat-preview-card">
+        <div class="mat-preview-title">Интерактивное превью коврика</div>
+        <div class="mat-svg-wrap">
+          <svg viewBox="0 0 260 340" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <!-- Shadow filters -->
+              <filter id="mat-shadow" x="-10%" y="-10%" width="120%" height="120%">
+                <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000" flood-opacity="0.6"/>
+              </filter>
+              <!-- Diamond mesh pattern -->
+              <pattern id="pattern-romb" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                <rect width="14" height="14" id="mat-fill-rect" fill="#1a1a1a"/>
+                <path d="M 0 0 L 14 0 L 14 14 L 0 14 Z" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.2"/>
+                <path d="M 0 0 L 14 14 M 14 0 L 0 14" stroke="rgba(0,0,0,0.6)" stroke-width="1.2"/>
+              </pattern>
+              <!-- Honeycomb (sota) mesh pattern -->
+              <pattern id="pattern-sota" width="16" height="27.7" patternUnits="userSpaceOnUse">
+                <rect width="16" height="27.7" fill="#1a1a1a"/>
+                <path d="M 8 0 L 16 4.6 L 16 13.8 L 8 18.5 L 0 13.8 L 0 4.6 Z M 0 27.7 L 8 23.1 L 16 27.7"
+                      fill="none" stroke="rgba(0,0,0,0.7)" stroke-width="1.2"/>
+                <path d="M 8 0 L 16 4.6 L 16 13.8 L 8 18.5 L 0 13.8 L 0 4.6 Z"
+                      fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="0.8"/>
+              </pattern>
+            </defs>
+
+            <!-- Mat main shape with border -->
+            <path id="svg-mat-border"
+                  d="M 50 25 C 90 20, 170 20, 210 25 C 235 30, 245 60, 240 120 C 235 180, 245 270, 230 305 C 215 325, 60 325, 35 305 C 20 270, 25 180, 20 120 C 15 60, 25 30, 50 25 Z"
+                  fill="none" stroke="#e02020" stroke-width="16" stroke-linejoin="round" filter="url(#mat-shadow)"/>
+
+            <path id="svg-mat-body"
+                  d="M 50 25 C 90 20, 170 20, 210 25 C 235 30, 245 60, 240 120 C 235 180, 245 270, 230 305 C 215 325, 60 325, 35 305 C 20 270, 25 180, 20 120 C 15 60, 25 30, 50 25 Z"
+                  fill="url(#pattern-romb)"/>
+
+            <!-- 3D Borders Highlight -->
+            <path id="svg-3d-borders" style="display:none;"
+                  d="M 50 25 C 90 20, 170 20, 210 25 C 235 30, 245 60, 240 120 C 235 180, 245 270, 230 305 C 215 325, 60 325, 35 305 C 20 270, 25 180, 20 120 C 15 60, 25 30, 50 25 Z"
+                  fill="none" stroke="rgba(124, 58, 237, 0.45)" stroke-width="6" stroke-dasharray="6,4"/>
+
+            <!-- Metallic Heel Pad Layer -->
+            <g id="svg-heel-metal" style="display:none;" transform="translate(65, 140)">
+              <rect x="0" y="0" width="130" height="90" rx="10" fill="url(#metal-grad)" stroke="#999" stroke-width="2"/>
+              <defs>
+                <linearGradient id="metal-grad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#e6e6e6"/>
+                  <stop offset="35%" stop-color="#a6a6a6"/>
+                  <stop offset="70%" stop-color="#ffffff"/>
+                  <stop offset="100%" stop-color="#808080"/>
+                </linearGradient>
+              </defs>
+              <!-- Anti-slip rubber inserts -->
+              <rect x="15" y="15" width="100" height="8" rx="4" fill="#222"/>
+              <rect x="15" y="32" width="100" height="8" rx="4" fill="#222"/>
+              <rect x="15" y="49" width="100" height="8" rx="4" fill="#222"/>
+              <rect x="15" y="66" width="100" height="8" rx="4" fill="#222"/>
+              <circle cx="8" cy="8" r="3" fill="#333"/><circle cx="122" cy="8" r="3" fill="#333"/>
+              <circle cx="8" cy="82" r="3" fill="#333"/><circle cx="122" cy="82" r="3" fill="#333"/>
+            </g>
+
+            <!-- Polymer Heel Pad Layer -->
+            <g id="svg-heel-polymer" style="display:none;" transform="translate(65, 140)">
+              <rect x="0" y="0" width="130" height="90" rx="12" fill="#222" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+              <path d="M 15 25 L 115 25 M 15 45 L 115 45 M 15 65 L 115 65" stroke="#444" stroke-width="4" stroke-linecap="round"/>
+            </g>
+
+            <!-- Car Logo Badge Plate -->
+            <g id="svg-badge-plate" style="display:none;" transform="translate(85, 275)">
+              <rect x="0" y="0" width="90" height="24" rx="6" fill="#silver" stroke="#fff" stroke-width="1.5"
+                    style="fill:linear-gradient(180deg,#fff 0%,#ccc 50%,#999 100%);filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));"/>
+              <text id="svg-badge-text" x="45" y="16" font-family="sans-serif" font-size="10" font-weight="bold" fill="#111" text-anchor="middle">
+                CAMRY
+              </text>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Color & Texture Customizer -->
+      <div class="scard">
+        <div class="schd">
+          <span class="schd-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a7 7 0 0 0 0 14 7 7 0 0 1 0 6"/></svg>
+            2. Цвета и структура
+          </span>
+        </div>
+        <div class="scb">
+          <!-- Structure toggle -->
+          <div class="form-group">
+            <label class="form-label">Тип ячейки</label>
+            <div class="segmented-control">
+              <button class="seg-btn active" data-cell="romb">
+                <span>❖</span> Ромб
+              </button>
+              <button class="seg-btn" data-cell="sota">
+                <span>⬡</span> Сота
+              </button>
+            </div>
+          </div>
+
+          <!-- EVA Color Picker -->
+          <div class="color-picker-group">
+            <div class="color-picker-title">
+              <span>Цвет материала EVA:</span>
+              <span class="current-name" id="current-mat-color">Чёрный</span>
+            </div>
+            <div class="color-swatches" id="mat-colors"></div>
+          </div>
+
+          <!-- Edge Color Picker -->
+          <div class="color-picker-group">
+            <div class="color-picker-title">
+              <span>Цвет окантовки (канта):</span>
+              <span class="current-name" id="current-edge-color">Красный</span>
+            </div>
+            <div class="color-swatches" id="edge-colors"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Options & Accessories -->
+      <div class="scard">
+        <div class="schd">
+          <span class="schd-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            3. Комплектация и опции
+          </span>
+        </div>
+        <div class="scb">
+          <div class="option-item selected" style="cursor:default;">
+            <div class="option-left">
+              <div class="option-check">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="option-info">
+                <div class="option-name">Стандартный салон</div>
+                <div class="option-desc">Водитель + пассажир + задний ряд + перемычка</div>
+              </div>
+            </div>
+            <div class="option-price">2 800 ₽</div>
+          </div>
+
+          <div class="option-item" id="opt-3d">
+            <div class="option-left">
+              <div class="option-check">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="option-info">
+                <div class="option-name">3D формовка с бортами</div>
+                <div class="option-desc">Цельная лапа без разреза, борта 3-5 см</div>
+              </div>
+            </div>
+            <div class="option-price">+1 200 ₽</div>
+          </div>
+
+          <div class="option-item" id="opt-trunk">
+            <div class="option-left">
+              <div class="option-check">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="option-info">
+                <div class="option-name">Коврик в багажник</div>
+                <div class="option-desc">По точной геометрии багажного отсека</div>
+              </div>
+            </div>
+            <div class="option-price">+2 000 ₽</div>
+          </div>
+
+          <!-- Heel Pad Selector -->
+          <div class="form-group" style="margin-top:14px;">
+            <label class="form-label">Подпятник (защита под правую пятку):</label>
+            <div class="chip-group" id="heel-chips">
+              <button class="chip-btn active" data-heel="none">Без подпятника</button>
+              <button class="chip-btn" data-heel="polymer">Полимерный (+400 ₽)</button>
+              <button class="chip-btn" data-heel="metal">Металл+Резина (+700 ₽)</button>
+            </div>
+          </div>
+
+          <!-- Badges Selector -->
+          <div class="form-group" style="margin-top:14px;">
+            <label class="form-label">Металлические шильдики с маркой авто:</label>
+            <div class="chip-group" id="badge-chips">
+              <button class="chip-btn active" data-badges="0">Без шильдиков</button>
+              <button class="chip-btn" data-badges="2">2 шт. на перед (+500 ₽)</button>
+              <button class="chip-btn" data-badges="4">4 шт. на все (+900 ₽)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Price & Order Sticky Bar -->
+      <div class="price-bar">
+        <div class="price-details">
+          <div class="price-label">Итого к оплате</div>
+          <div class="price-amount" id="price-total-display">2 800 ₽</div>
+          <div class="price-timing">
+            <span>⚡ Изготовление: 1-2 дня</span>
+          </div>
+        </div>
+        <button class="btn-order-main" id="btn-open-checkout">
+          <span>Оформить заказ</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ==============================================
+         VIEW 2: ЗАПИСЬ В БОКС №3
+         ============================================== -->
+    <section class="view" id="v-booking">
+      <div class="header-brand">
+        <div class="badge-city">Запись на Карболитовскую, 12</div>
+        <h2 class="brand-title">Запись в бокс №3</h2>
+        <p class="brand-slogan">Бесплатный замер лекал и установка ковриков</p>
+      </div>
+
+      <div class="scard">
+        <div class="schd">
+          <span class="schd-title">1. Выберите дату визита</span>
+        </div>
+        <div class="scb">
+          <div class="date-carousel" id="dates-carousel"></div>
+        </div>
+      </div>
+
+      <div class="scard">
+        <div class="schd">
+          <span class="schd-title">2. Выберите время (слот)</span>
+        </div>
+        <div class="scb">
+          <div class="slots-grid" id="slots-container"></div>
+        </div>
+      </div>
+
+      <div class="scard">
+        <div class="schd">
+          <span class="schd-title">3. Данные для бронирования</span>
+        </div>
+        <div class="scb">
+          <form id="form-booking">
+            <div class="form-group">
+              <label class="form-label">Марка и модель авто</label>
+              <input type="text" id="booking-car" class="input-text" placeholder="Например: Toyota Camry 2020" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ваше имя</label>
+              <input type="text" id="booking-name" class="input-text" placeholder="Иван" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Номер телефона для связи</label>
+              <input type="tel" id="booking-phone" class="input-text" placeholder="+7 (___) ___-__-__" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Цель визита</label>
+              <select id="booking-purpose" class="select-input">
+                <option value="Бесплатный замер лекал">Бесплатный замер лекал (15 минут)</option>
+                <option value="Установка готового комплекта">Установка готового комплекта</option>
+                <option value="Консультация и подбор цветов">Консультация и подбор цветов</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Комментарий (необязательно)</label>
+              <input type="text" id="booking-comment" class="input-text" placeholder="Особые пожелания...">
+            </div>
+            <div style="margin-top:16px;">
+              <button type="submit" class="btn-order-main btn-block">
+                Подтвердить запись
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==============================================
+         VIEW 3: ПРИМЕРЫ РАБОТ И FAQ
+         ============================================== -->
+    <section class="view" id="v-examples">
+      <div class="header-brand">
+        <h2 class="brand-title">Примеры и FAQ</h2>
+        <p class="brand-slogan">Готовые работы мастерской и ответы на частые вопросы</p>
+      </div>
+
+      <div style="margin-bottom:12px;font-size:16px;font-weight:700;">Популярные сочетания:</div>
+      <div class="gallery-grid">
+        <!-- Card 1 -->
+        <div class="example-card">
+          <div class="example-img-wrap">
+            <span class="example-badge">Хит сезона</span>
+            <div style="font-size:32px;">🚗</div>
+          </div>
+          <div class="example-body">
+            <div class="example-car">Toyota Camry XV70</div>
+            <div class="example-details">Чёрный ромб + Ярко-красный кант, металлический подпятник, 3D формовка с бортами.</div>
+            <button class="btn-copy-config" data-make="Toyota" data-model="Camry" data-mat="black" data-edge="red" data-cell="romb" data-heel="metal" data-has3d="true">
+              ✨ Хочу так же!
+            </button>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="example-card">
+          <div class="example-img-wrap">
+            <span class="example-badge">Топ для кроссоверов</span>
+            <div style="font-size:32px;">🚙</div>
+          </div>
+          <div class="example-body">
+            <div class="example-car">Haval Jolion 4WD</div>
+            <div class="example-details">Графит сота + Серый кант, полимерный подпятник, точные лекала с перекрытием ковролина.</div>
+            <button class="btn-copy-config" data-make="Haval" data-model="Jolion" data-mat="graphite" data-edge="gray" data-cell="sota" data-heel="polymer" data-has3d="false">
+              ✨ Хочу так же!
+            </button>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="example-card">
+          <div class="example-img-wrap">
+            <span class="example-badge">Строгая классика</span>
+            <div style="font-size:32px;">🏎</div>
+          </div>
+          <div class="example-body">
+            <div class="example-car">Lada Vesta NG</div>
+            <div class="example-details">Чёрный ромб + Синий кант, оригинальные штатные клипсы, металлический подпятник.</div>
+            <button class="btn-copy-config" data-make="Lada" data-model="Vesta" data-mat="black" data-edge="blue" data-cell="romb" data-heel="metal" data-has3d="true">
+              ✨ Хочу так же!
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin:24px 0 12px;font-size:16px;font-weight:700;">Частые вопросы (FAQ):</div>
+      <div id="faq-accordion"></div>
+    </section>
+
+    <!-- ==============================================
+         VIEW 4: КОНТАКТЫ / КАК ПРОЕХАТЬ
+         ============================================== -->
+    <section class="view" id="v-contacts">
+      <div class="header-brand">
+        <h2 class="brand-title">Контакты</h2>
+        <p class="brand-slogan">Мастерская автоковриков EVA-ART в Кемерово</p>
+      </div>
+
+      <div class="contact-hero">
+        <div class="contact-hero-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <div class="contact-address">г. Кемерово, ул. Карболитовская, д. 12, бокс №3</div>
+        <p style="color:var(--text-sec);font-size:13px;">Мастерская индивидуального пошива и раскроя</p>
+
+        <div class="contact-hint-card">
+          <span style="font-size:22px;">🚪</span>
+          <div>
+            <b>Ориентир для заезда:</b><br>
+            Въезд в арку со стороны ул. Карболитовская, во дворе бокс №3 (вывеска EVA-ART).
+          </div>
+        </div>
+
+        <div class="contact-actions">
+          <a class="btn-nav btn-yandex" href="https://yandex.ru/maps/?text=Кемерово,+ул.+Карболитовская,+12" target="_blank">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14.93V15c0-.55-.45-1-1-1s-1 .45-1 1v1.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93c.33.05.66.07 1 .07s.67-.02 1-.07V18c1.1 0 2-.9 2-2v-1l4.79-7.86c.13.58.21 1.17.21 1.79 0 4.08-3.05 7.44-7 7.93z"/></svg>
+            Яндекс.Карты
+          </a>
+          <a class="btn-nav btn-2gis" href="https://2gis.ru/kemerovo/search/Кемерово,%20ул.%20Карболитовская,%2012" target="_blank">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8" stroke="#fff" stroke-width="2"/></svg>
+            2ГИС
+          </a>
+          <a class="btn-nav btn-phone-call" href="tel:+79512229999">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            Позвонить +7 951 222 9999
+          </a>
+        </div>
+      </div>
+
+      <div class="scard">
+        <div class="schd"><span class="schd-title">График работы</span></div>
+        <div class="scb" style="line-height:1.6;font-size:14px;color:var(--text-sec);">
+          • Понедельник – Суббота: с <b>10:00</b> до <b>19:00</b><br>
+          • Воскресенье: по предварительной записи<br>
+          • Изготовление заказов: в течение 1 рабочего дня
+        </div>
+      </div>
+    </section>
+
+    <!-- ==============================================
+         VIEW 5: ПАНЕЛЬ АДМИНИСТРАТОРА
+         ============================================== -->
+    <section class="view" id="v-admin">
+      <div class="header-brand">
+        <div class="badge-city" style="background:rgba(239,68,68,0.2);color:#FCA5A5;border-color:rgba(239,68,68,0.4);">
+          Администратор
+        </div>
+        <h2 class="brand-title">Панель управления</h2>
+        <p class="brand-slogan">Управление заявками и уведомлениями клиентов</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="admin-stats-grid">
+        <div class="stat-box">
+          <div class="stat-box-val" id="stat-new-orders">0</div>
+          <div class="stat-box-lbl">Новые заявки</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-val" id="stat-in-work">0</div>
+          <div class="stat-box-lbl">В раскрое</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-val" id="stat-ready">0</div>
+          <div class="stat-box-lbl">Ждут в боксе</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-val" id="stat-appointments">0</div>
+          <div class="stat-box-lbl">Записи на замер</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="admin-filter-bar">
+        <div class="admin-filter-chip active" data-status="all">Все</div>
+        <div class="admin-filter-chip" data-status="new">Новые</div>
+        <div class="admin-filter-chip" data-status="in_progress">В работе</div>
+        <div class="admin-filter-chip" data-status="ready">Готово в боксе</div>
+        <div class="admin-filter-chip" data-status="completed">Выданы</div>
+      </div>
+
+      <div id="admin-orders-list"></div>
+
+      <!-- Add Pattern Tool -->
+      <div class="scard" style="margin-top:20px;">
+        <div class="schd"><span class="schd-title">Пополнить базу лекал</span></div>
+        <div class="scb">
+          <form id="form-add-pattern">
+            <div class="input-row">
+              <input type="text" id="pat-make" class="input-text" placeholder="Марка (напр. Geely)" required>
+              <input type="text" id="pat-model" class="input-text" placeholder="Модель (напр. Tugella)" required>
+            </div>
+            <div style="margin-top:10px;">
+              <input type="text" id="pat-notes" class="input-text" placeholder="Примечание к лекалам">
+            </div>
+            <button type="submit" class="btn-order-main btn-block" style="margin-top:12px;padding:10px;">
+              + Добавить авто в базу лекал
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==============================================
+       CHECKOUT MODAL SHEET
+       ============================================== -->
+  <div class="modal-overlay" id="checkout-modal">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Оформление заказа</div>
+      <div class="modal-subtitle">Подтвердите параметры перед отправкой мастера в раскрой</div>
+
+      <div style="background:var(--bg-input);border-radius:16px;padding:14px;margin-bottom:16px;">
+        <div style="font-weight:700;font-size:15px;" id="modal-car-name">Toyota Camry 2020</div>
+        <div style="font-size:13px;color:var(--text-sec);margin-top:4px;" id="modal-color-summary"></div>
+        <div style="font-size:18px;font-weight:800;color:var(--accent-light);margin-top:8px;" id="modal-total-price"></div>
+      </div>
+
+      <form id="form-submit-order">
+        <div class="form-group">
+          <label class="form-label">Ваше имя</label>
+          <input type="text" id="order-name" class="input-text" placeholder="Иван" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Телефон для связи</label>
+          <input type="tel" id="order-phone" class="input-text" placeholder="+7 951 222 9999" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Способ получения</label>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="radio" name="delivery" value="Самовывоз и бесплатная установка в боксе №3 (ул. Карболитовская, 12)" checked>
+              <span>Самовывоз и установка в боксе №3</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="radio" name="delivery" value="Доставка по РФ (СДЭК / Почта)">
+              <span>Доставка СДЭК / Почта России</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Комментарий к заказу</label>
+          <input type="text" id="order-comment" class="input-text" placeholder="Цвет нити, дополнительные клипсы...">
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:20px;">
+          <button type="button" class="btn-status-act" id="btn-close-modal" style="flex:1;padding:12px;">Отмена</button>
+          <button type="submit" class="btn-order-main" id="btn-submit-order" style="flex:2;">Подтвердить заказ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==============================================
+       LIQUID GLASS DOCK & TAB BAR (FROM KIT)
+       ============================================== -->
+  <div class="dock">
+    <div class="dock-inner">
+      <div class="bar" id="bar" style="--x:0;--tx:0;--sx:1;--sy:1;--p:0">
+        <div class="matte base" id="base"></div>
+        <div class="fil" id="fil"></div>
+        <div class="solid"></div>
+        <div class="tabs" id="tabs">
+          <!-- Tab 0: Калькулятор -->
+          <button class="tab on" aria-label="Калькулятор">
+            <span class="ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M8 18h.01M12 18h.01"/></svg>
+            </span>
+            <span>Заказ</span>
+          </button>
+          <!-- Tab 1: Запись в бокс -->
+          <button class="tab" aria-label="Запись в бокс">
+            <span class="ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+            <span>Запись</span>
+          </button>
+          <!-- Tab 2: Примеры и FAQ -->
+          <button class="tab" aria-label="Примеры и FAQ">
+            <span class="ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </span>
+            <span>Примеры</span>
+          </button>
+          <!-- Tab 3: Контакты -->
+          <button class="tab" aria-label="Контакты">
+            <span class="ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </span>
+            <span>Контакты</span>
+          </button>
+          <!-- Tab 4: Админка (отображается только администраторам) -->
+          <button class="tab" id="tab-admin" aria-label="Админка" style="display:none;">
+            <span class="ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </span>
+            <span>Админ</span>
+          </button>
+        </div>
+        <div class="glass thumb" id="thumb"><div class="lens" id="lens"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SVG Filter container for Liquid Glass shader computation -->
+  <svg width="0" height="0" style="position:absolute;pointer-events:none;" color-interpolation-filters="sRGB">
+    <defs id="defs"></defs>
+  </svg>
+
+  <script src="/static/js/liquid-glass.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
