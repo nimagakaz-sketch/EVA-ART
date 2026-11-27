@@ -112,6 +112,8 @@ async function initApp() {
     if (state.isAdmin) {
       loadAdminOrders();
       loadAdminStats();
+      loadAdminPrices();
+      loadAdminSlots();
     }
   } catch (err) {
     console.error('App init error:', err);
@@ -299,6 +301,7 @@ function updateMatSvgPreview() {
   // Update cell mesh pattern color and type
   const meshPattern = document.getElementById('mat-cell-pattern');
   const meshFillRect = document.getElementById('mat-fill-rect');
+  const meshFillSotaRect = document.getElementById('mat-fill-sota-rect');
 
   if (matBorder) {
     matBorder.setAttribute('stroke', state.edgeColor.hex);
@@ -306,6 +309,9 @@ function updateMatSvgPreview() {
 
   if (meshFillRect) {
     meshFillRect.setAttribute('fill', state.matColor.hex);
+  }
+  if (meshFillSotaRect) {
+    meshFillSotaRect.setAttribute('fill', state.matColor.hex);
   }
 
   // Cell pattern switch (romb or sota)
@@ -346,15 +352,23 @@ function updateMatSvgPreview() {
 // ==========================================
 // 4. PRICE CALCULATION
 // ==========================================
-function calculatePrice() {
-  let price = 2800; // Base standard salon
+function getPriceByCode(itemKey, defaultVal) {
+  if (state.config && state.config.prices) {
+    const p = state.config.prices.find(x => x.item_key === itemKey);
+    if (p && p.price !== undefined) return p.price;
+  }
+  return defaultVal;
+}
 
-  if (state.has3dBorders) price += 1200;
-  if (state.hasTrunk) price += 2000;
-  if (state.heelPad === 'metal') price += 700;
-  if (state.heelPad === 'polymer') price += 400;
-  if (state.badgesCount === 2) price += 500;
-  if (state.badgesCount === 4) price += 900;
+function calculatePrice() {
+  let price = getPriceByCode('standard_salon', 2800);
+
+  if (state.has3dBorders) price += getPriceByCode('3d_borders', 1200);
+  if (state.hasTrunk) price += getPriceByCode('trunk', 2000);
+  if (state.heelPad === 'metal') price += getPriceByCode('metal_heel', 700);
+  if (state.heelPad === 'polymer') price += getPriceByCode('polymer_heel', 400);
+  if (state.badgesCount === 2) price += getPriceByCode('badge_pair', 500);
+  if (state.badgesCount === 4) price += getPriceByCode('badge_four', 900);
 
   state.totalPrice = price;
   const priceDisplay = document.getElementById('price-total-display');
@@ -832,6 +846,161 @@ document.getElementById('form-add-pattern')?.addEventListener('submit', async e 
       document.getElementById('pat-make').value = '';
       document.getElementById('pat-model').value = '';
       document.getElementById('pat-notes').value = '';
+    }
+  } catch (err) {
+    showToast('Ошибка добавления');
+  }
+});
+
+// Admin Price Management
+async function loadAdminPrices() {
+  const container = document.getElementById('admin-prices-list');
+  if (!container) return;
+  try {
+    const res = await fetch('/api/admin/prices', {
+      headers: { 'X-Telegram-User-Id': String(state.telegramUser?.id || 0) },
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    container.innerHTML = data.prices.map(p => `
+      <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);">
+        <div style="flex:1;">
+          <div style="font-weight:600;font-size:14px;">${p.title}</div>
+          <div style="font-size:12px;color:var(--text-sec);">${p.description || ''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input type="number" id="price-input-${p.id}" value="${p.price}" style="width:80px;padding:6px 8px;border-radius:8px;background:var(--bg-input);border:1px solid var(--border-color);color:white;font-weight:700;text-align:right;">
+          <span style="font-size:13px;color:var(--text-sec);">₽</span>
+          <button class="btn-status-act ready-btn" style="padding:6px 10px;font-size:12px;" onclick="saveAdminPrice(${p.id})">💾</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error('Error loading admin prices:', err);
+  }
+}
+
+window.saveAdminPrice = async function(priceId) {
+  haptic('medium');
+  const input = document.getElementById(`price-input-${priceId}`);
+  if (!input) return;
+  const newPrice = parseFloat(input.value);
+  if (isNaN(newPrice) || newPrice < 0) {
+    showToast('Введите корректную цену');
+    return;
+  }
+  try {
+    const res = await fetch(`/api/admin/prices/${priceId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Telegram-User-Id': String(state.telegramUser?.id || 0),
+      },
+      body: JSON.stringify({ price: newPrice }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      haptic('success');
+      showToast('Цена успешно обновлена!');
+      const cfgRes = await fetch('/api/config');
+      state.config = await cfgRes.json();
+      calculatePrice();
+      loadAdminPrices();
+    } else {
+      showToast('Ошибка сохранения цены');
+    }
+  } catch (err) {
+    showToast('Ошибка сети');
+  }
+};
+
+// Admin Slot Management
+async function loadAdminSlots() {
+  const container = document.getElementById('admin-slots-list');
+  if (!container) return;
+  try {
+    const res = await fetch('/api/admin/slots', {
+      headers: { 'X-Telegram-User-Id': String(state.telegramUser?.id || 0) },
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.slots.length) {
+      container.innerHTML = '<span style="color:var(--text-dim);font-size:13px;">Нет добавленных слотов</span>';
+      return;
+    }
+    container.innerHTML = data.slots.map(s => `
+      <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:10px;background:${s.is_active ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.05)'};border:1px solid ${s.is_active ? 'rgba(124,58,237,0.5)' : 'rgba(255,255,255,0.1)'};">
+        <span onclick="toggleAdminSlot(${s.id})" style="cursor:pointer;font-weight:700;font-size:13px;color:${s.is_active ? '#A78BFA' : 'var(--text-dim)'};text-decoration:${s.is_active ? 'none' : 'line-through'};">
+          ${s.slot_time} ${s.is_active ? '✓' : '✗'}
+        </span>
+        <button onclick="deleteAdminSlot(${s.id})" style="background:none;border:none;color:#EF4444;cursor:pointer;font-size:13px;padding:0 2px;">✕</button>
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error('Error loading admin slots:', err);
+  }
+}
+
+window.toggleAdminSlot = async function(slotId) {
+  haptic('light');
+  try {
+    const res = await fetch(`/api/admin/slots/${slotId}/toggle`, {
+      method: 'POST',
+      headers: { 'X-Telegram-User-Id': String(state.telegramUser?.id || 0) },
+    });
+    const data = await res.json();
+    if (data.success) {
+      loadAdminSlots();
+      if (state.selectedBookingDate) loadAvailableSlots(state.selectedBookingDate);
+    }
+  } catch (err) {
+    showToast('Ошибка сети');
+  }
+};
+
+window.deleteAdminSlot = async function(slotId) {
+  if (!confirm('Удалить этот слот времени?')) return;
+  haptic('medium');
+  try {
+    const res = await fetch(`/api/admin/slots/${slotId}`, {
+      method: 'DELETE',
+      headers: { 'X-Telegram-User-Id': String(state.telegramUser?.id || 0) },
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Слот удален');
+      loadAdminSlots();
+      if (state.selectedBookingDate) loadAvailableSlots(state.selectedBookingDate);
+    }
+  } catch (err) {
+    showToast('Ошибка сети');
+  }
+};
+
+document.getElementById('form-add-slot')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  haptic('medium');
+  const input = document.getElementById('slot-time');
+  const val = input.value.trim();
+  if (!val) return;
+  try {
+    const res = await fetch('/api/admin/slots', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Telegram-User-Id': String(state.telegramUser?.id || 0),
+      },
+      body: JSON.stringify({ slot: val }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      haptic('success');
+      showToast(`Слот ${val} добавлен!`);
+      input.value = '';
+      loadAdminSlots();
+      if (state.selectedBookingDate) loadAvailableSlots(state.selectedBookingDate);
+    } else {
+      showToast('Слот уже существует или некорректен');
     }
   } catch (err) {
     showToast('Ошибка добавления');

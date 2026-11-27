@@ -15,3 +15,4 @@ export_*.xlsx
 export_*.csv
 liquid-glass-kit.zip
 liquid-glass-kit-extracted/
+.askpass.sh

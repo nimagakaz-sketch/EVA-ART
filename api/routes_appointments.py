@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from database.connection import get_db
-from database.models import Appointment
+from database.models import Appointment, TimeSlot
 from api.schemas import AppointmentCreateSchema
 from bot.notifications import notify_appointment_created
 
@@ -12,14 +12,23 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/appointments", tags=["appointments"])
 
-STANDARD_SLOTS = ["10:00", "12:00", "14:00", "16:00", "18:00"]
-
 @router.get("/available-slots")
 async def get_available_slots(
     date: str = Query(..., pattern=r"^\d{4}-\d{2}-\d{2}$"),
     db: AsyncSession = Depends(get_db),
 ):
     """Returns list of slots for a given date with booked status."""
+    # Fetch active slots from database
+    stmt_slots = (
+        select(TimeSlot)
+        .where(TimeSlot.is_active == True)
+        .order_by(TimeSlot.order_num.asc(), TimeSlot.slot.asc())
+    )
+    slots_res = (await db.execute(stmt_slots)).scalars().all()
+    active_slots = [s.slot for s in slots_res]
+    if not active_slots:
+        active_slots = ["10:00", "12:00", "14:00", "16:00", "18:00"]
+
     stmt = select(Appointment.time_slot).where(
         Appointment.date == date,
         Appointment.status != "cancelled",
@@ -27,7 +36,7 @@ async def get_available_slots(
     booked_slots = set((await db.execute(stmt)).scalars().all())
 
     slots_info = []
-    for slot in STANDARD_SLOTS:
+    for slot in active_slots:
         slots_info.append({
             "slot": slot,
             "is_available": slot not in booked_slots,

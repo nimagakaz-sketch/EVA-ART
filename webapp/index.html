@@ -81,7 +81,7 @@
               </pattern>
               <!-- Honeycomb (sota) mesh pattern -->
               <pattern id="pattern-sota" width="16" height="27.7" patternUnits="userSpaceOnUse">
-                <rect width="16" height="27.7" fill="#1a1a1a"/>
+                <rect width="16" height="27.7" id="mat-fill-sota-rect" fill="#1a1a1a"/>
                 <path d="M 8 0 L 16 4.6 L 16 13.8 L 8 18.5 L 0 13.8 L 0 4.6 Z M 0 27.7 L 8 23.1 L 16 27.7"
                       fill="none" stroke="rgba(0,0,0,0.7)" stroke-width="1.2"/>
                 <path d="M 8 0 L 16 4.6 L 16 13.8 L 8 18.5 L 0 13.8 L 0 4.6 Z"
@@ -490,6 +490,27 @@
       </div>
 
       <div id="admin-orders-list"></div>
+
+      <!-- Manage Prices Tool -->
+      <div class="scard" style="margin-top:20px;">
+        <div class="schd"><span class="schd-title">💰 Управление ценами (Прайс-лист)</span></div>
+        <div class="scb">
+          <div id="admin-prices-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+      </div>
+
+      <!-- Manage Booking Slots Tool -->
+      <div class="scard" style="margin-top:20px;">
+        <div class="schd"><span class="schd-title">⏰ Управление слотами записи</span></div>
+        <div class="scb">
+          <div style="font-size:13px;color:var(--text-sec);margin-bottom:8px;">Активные слоты записи в бокс (нажмите для вкл/выкл):</div>
+          <div id="admin-slots-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;"></div>
+          <form id="form-add-slot" style="display:flex;gap:8px;">
+            <input type="text" id="slot-time" class="input-text" placeholder="Время (напр. 11:00)" style="flex:2;" required pattern="^\d{1,2}:\d{2}$">
+            <button type="submit" class="btn-order-main" style="flex:1;padding:10px;font-size:13px;">+ Добавить</button>
+          </form>
+        </div>
+      </div>
 
       <!-- Add Pattern Tool -->
       <div class="scard" style="margin-top:20px;">

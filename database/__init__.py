@@ -1,5 +1,5 @@
 from database.connection import get_db, init_db
-from database.models import Order, Appointment, PriceConfig, Pattern, FAQ
+from database.models import Order, Appointment, PriceConfig, Pattern, FAQ, TimeSlot
 
 __all__ = [
     "get_db",
@@ -9,4 +9,5 @@ __all__ = [
     "PriceConfig",
     "Pattern",
     "FAQ",
+    "TimeSlot",
 ]

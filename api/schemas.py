@@ -47,3 +47,6 @@ class PatternCreateSchema(BaseModel):
 class PriceUpdateSchema(BaseModel):
     price: int = Field(..., ge=0)
     is_active: Optional[bool] = True
+
+class SlotCreateSchema(BaseModel):
+    slot: str = Field(..., pattern=r"^\d{1,2}:\d{2}$")

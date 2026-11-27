@@ -18,27 +18,27 @@ class Order(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     order_number = Column(String(32), unique=True, nullable=False, index=True)
     user_id = Column(BigInteger, nullable=True, index=True)
-    user_name = Column(String(128), nullable=False)
-    phone = Column(String(32), nullable=False, index=True)
+    user_name = Column(String(255), nullable=False)
+    phone = Column(String(64), nullable=False, index=True)
     
     # Car details
-    car_make = Column(String(64), nullable=False, index=True)
-    car_model = Column(String(64), nullable=False, index=True)
-    car_year = Column(String(16), nullable=True)
+    car_make = Column(String(128), nullable=False, index=True)
+    car_model = Column(String(128), nullable=False, index=True)
+    car_year = Column(String(32), nullable=True)
     has_pattern = Column(Boolean, default=False)
     
     # Configuration
-    package_type = Column(String(64), nullable=False) # standard, 3d_borders, trunk_only, full_set
+    package_type = Column(String(128), nullable=False) # standard, 3d_borders, trunk_only, full_set
     cell_type = Column(String(32), nullable=False) # romb, sota
-    mat_color = Column(String(32), nullable=False) # black, graphite, gray, beige, red, blue, etc.
-    edge_color = Column(String(32), nullable=False) # black, red, blue, gray, white, orange, etc.
-    heel_pad = Column(String(32), default="none") # none, polymer, metal
+    mat_color = Column(String(64), nullable=False) # black, graphite, gray, beige, red, blue, etc.
+    edge_color = Column(String(64), nullable=False) # black, red, blue, gray, white, orange, etc.
+    heel_pad = Column(String(64), default="none") # none, polymer, metal
     badges_count = Column(Integer, default=0) # 0, 2, 4
     
     # Pricing & Delivery
     total_price = Column(Integer, nullable=False)
-    estimated_days = Column(String(64), default="1-2 рабочих дня")
-    delivery_type = Column(String(64), nullable=False) # pickup_box3, delivery_cdek
+    estimated_days = Column(String(128), default="1-2 рабочих дня")
+    delivery_type = Column(String(255), nullable=False) # pickup_box3, delivery_cdek
     comment = Column(Text, nullable=True)
     
     # Status: new, in_progress, ready, completed, cancelled
@@ -175,5 +175,22 @@ class FAQ(Base):
             "question": self.question,
             "answer": self.answer,
             "category": self.category,
+            "order_num": self.order_num,
+        }
+
+
+class TimeSlot(Base):
+    __tablename__ = "time_slots"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    slot = Column(String(16), unique=True, nullable=False, index=True) # e.g. "10:00"
+    is_active = Column(Boolean, default=True, nullable=False)
+    order_num = Column(Integer, default=0)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "slot": self.slot,
+            "is_active": self.is_active,
             "order_num": self.order_num,
         }

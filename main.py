@@ -42,15 +42,17 @@ async def lifespan(app: FastAPI):
     global bot_task
 
     async def start_polling():
-        try:
-            logger.info("Starting Telegram Bot polling...")
-            # Drop pending updates to avoid processing old ones on restart
-            await bot.delete_webhook(drop_pending_updates=True)
-            await dp.start_polling(bot)
-        except asyncio.CancelledError:
-            logger.info("Telegram Bot polling stopped.")
-        except Exception as e:
-            logger.error(f"Error in bot polling: {e}")
+        while True:
+            try:
+                logger.info("Starting Telegram Bot polling...")
+                await bot.delete_webhook(drop_pending_updates=False)
+                await dp.start_polling(bot, handle_signals=False)
+            except asyncio.CancelledError:
+                logger.info("Telegram Bot polling stopped.")
+                break
+            except Exception as e:
+                logger.error(f"Error in bot polling: {e}. Retrying in 4s...")
+                await asyncio.sleep(4)
 
     bot_task = asyncio.create_task(start_polling())
     logger.info(f"EVA-ART WebApp and API running on port {settings.APP_PORT}...")

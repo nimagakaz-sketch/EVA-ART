@@ -1,9 +1,11 @@
 import logging
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.models import PriceConfig, Pattern, FAQ
+from database.models import PriceConfig, Pattern, FAQ, TimeSlot
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_SLOTS = ["10:00", "12:00", "14:00", "16:00", "18:00"]
 
 DEFAULT_PRICES = [
     {
@@ -237,6 +239,14 @@ async def seed_initial_data(session: AsyncSession):
         if not res.scalar_one_or_none():
             faq = FAQ(**item)
             session.add(faq)
+
+    # 4. Seed Time Slots
+    for idx, slot_str in enumerate(DEFAULT_SLOTS):
+        stmt = select(TimeSlot).where(TimeSlot.slot == slot_str)
+        res = await session.execute(stmt)
+        if not res.scalar_one_or_none():
+            slot_obj = TimeSlot(slot=slot_str, is_active=True, order_num=idx)
+            session.add(slot_obj)
 
     await session.commit()
     logger.info("Default seed data successfully populated.")

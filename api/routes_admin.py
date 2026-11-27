@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, update
 from database.connection import get_db
-from database.models import Order, Appointment, PriceConfig, Pattern
-from api.schemas import OrderStatusUpdateSchema, PriceUpdateSchema, PatternCreateSchema
+from database.models import Order, Appointment, PriceConfig, Pattern, TimeSlot
+from api.schemas import OrderStatusUpdateSchema, PriceUpdateSchema, PatternCreateSchema, SlotCreateSchema
 from bot.notifications import notify_user_status_changed, STATUS_NAMES
 from config import settings
 
@@ -74,6 +74,64 @@ async def list_admin_appointments(
     stmt = select(Appointment).order_by(Appointment.date.desc(), Appointment.time_slot.asc()).limit(100)
     apps = (await db.execute(stmt)).scalars().all()
     return {"appointments": [a.to_dict() for a in apps]}
+
+@router.get("/slots")
+async def get_all_slots(
+    db: AsyncSession = Depends(get_db),
+    admin_id: int = Depends(verify_admin),
+):
+    stmt = select(TimeSlot).order_by(TimeSlot.order_num.asc(), TimeSlot.slot.asc())
+    slots = (await db.execute(stmt)).scalars().all()
+    return {"slots": [s.to_dict() for s in slots]}
+
+@router.post("/slots")
+async def add_slot(
+    payload: SlotCreateSchema,
+    db: AsyncSession = Depends(get_db),
+    admin_id: int = Depends(verify_admin),
+):
+    clean_slot = payload.slot.strip()
+    if len(clean_slot) == 4 and clean_slot[1] == ':':
+        clean_slot = '0' + clean_slot
+
+    stmt = select(TimeSlot).where(TimeSlot.slot == clean_slot)
+    existing = (await db.execute(stmt)).scalar_one_or_none()
+    if existing:
+        existing.is_active = True
+        await db.commit()
+        return {"success": True, "slot": existing.to_dict()}
+
+    new_slot = TimeSlot(slot=clean_slot, is_active=True)
+    db.add(new_slot)
+    await db.commit()
+    await db.refresh(new_slot)
+    return {"success": True, "slot": new_slot.to_dict()}
+
+@router.post("/slots/{slot_id}/toggle")
+async def toggle_slot(
+    slot_id: int,
+    db: AsyncSession = Depends(get_db),
+    admin_id: int = Depends(verify_admin),
+):
+    slot = await db.get(TimeSlot, slot_id)
+    if not slot:
+        raise HTTPException(status_code=404, detail="Слот не найден")
+    slot.is_active = not slot.is_active
+    await db.commit()
+    return {"success": True, "slot": slot.to_dict()}
+
+@router.delete("/slots/{slot_id}")
+async def delete_slot(
+    slot_id: int,
+    db: AsyncSession = Depends(get_db),
+    admin_id: int = Depends(verify_admin),
+):
+    slot = await db.get(TimeSlot, slot_id)
+    if not slot:
+        raise HTTPException(status_code=404, detail="Слот не найден")
+    await db.delete(slot)
+    await db.commit()
+    return {"success": True}
 
 @router.get("/prices")
 async def get_all_prices(
