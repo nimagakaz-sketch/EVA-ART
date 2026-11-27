@@ -1,0 +1,68 @@
+name: Deploy to AEZA VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to Production VPS (AEZA)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH to AEZA Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script_stop: true
+          script: |
+            echo "🚀 Starting automated deployment for EVA-ART on AEZA..."
+
+            # Project directory on VPS (default: /opt/eva-art or ~/eva-art)
+            PROJECT_DIR="/opt/eva-art"
+            if [ ! -d "$PROJECT_DIR" ]; then
+              PROJECT_DIR="$HOME/eva-art"
+            fi
+
+            if [ ! -d "$PROJECT_DIR" ]; then
+              echo "❌ Directory $PROJECT_DIR not found! Please clone the repository first as described in README.md."
+              exit 1
+            fi
+
+            cd "$PROJECT_DIR"
+            echo "📂 Working directory: $(pwd)"
+
+            # Ensure .env file exists on server
+            if [ ! -f ".env" ]; then
+              echo "⚠️  .env file not found in $PROJECT_DIR! Creating from .env.example..."
+              cp .env.example .env
+              echo "⚠️  Please configure your BOT_TOKEN and passwords in $PROJECT_DIR/.env!"
+            fi
+
+            echo "📥 Pulling latest changes from branch main..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            echo "🐳 Rebuilding and restarting Docker containers..."
+            docker compose down --remove-orphans || true
+            docker compose up -d --build
+
+            echo "🧹 Cleaning unused docker images..."
+            docker image prune -f
+
+            echo "⏳ Waiting for health check..."
+            sleep 8
+            if curl -sf http://127.0.0.1:8000/health > /dev/null; then
+              echo "✅ EVA-ART service is UP and healthy!"
+            else
+              echo "⚠️ Health check warning: service still starting up or port 8000 not responding immediately."
+            fi
+
+            echo "🎉 Deployment successfully completed!"
