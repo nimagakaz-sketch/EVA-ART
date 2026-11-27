@@ -4,7 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <title>Автоковрики EVA-ART — Кемерово</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="/static/js/telegram-web-app.js"></script>
+  <script>
+    (function() {
+      try {
+        if (window.Telegram && window.Telegram.WebApp) {
+          window.Telegram.WebApp.ready();
+          window.Telegram.WebApp.expand();
+          window.Telegram.WebApp.setHeaderColor('#121316');
+          window.Telegram.WebApp.setBackgroundColor('#121316');
+        }
+      } catch (e) {
+        console.warn('Early Telegram init error:', e);
+      }
+    })();
+  </script>
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
