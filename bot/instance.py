@@ -12,11 +12,9 @@ logger = logging.getLogger(__name__)
 
 class IPv6AiohttpSession(AiohttpSession):
     """Custom session that uses IPv6 socket family to bypass IPv4 telegram routing timeouts on server."""
-    async def create_session(self) -> aiohttp.ClientSession:
-        return aiohttp.ClientSession(
-            connector=TCPConnector(family=socket.AF_INET6),
-            json_serialize=self.json_dumps,
-        )
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._connector_init["family"] = socket.AF_INET6
 
 bot: Bot | None = None
 dp: Dispatcher = Dispatcher()

@@ -41,6 +41,7 @@ CONTACTS_TEXT = (
 
 @router.message(CommandStart())
 async def cmd_start(message: Message):
+    print(f">>> RECEIVED /start FROM USER {message.from_user.id if message.from_user else 'unknown'} <<<", flush=True)
     logger.info(f"Received /start command from user {message.from_user.id if message.from_user else 'unknown'}")
     try:
         await message.answer(
@@ -52,7 +53,9 @@ async def cmd_start(message: Message):
             text="Используйте меню внизу для быстрого доступа к конфигуратору и контактам:",
             reply_markup=get_main_reply_keyboard(),
         )
+        print(">>> WELCOME MESSAGES SENT SUCCESSFULLY <<<", flush=True)
     except Exception as e:
+        print(f">>> ERROR IN cmd_start: {e} <<<", flush=True)
         logger.error(f"Error in cmd_start: {e}", exc_info=True)
 
 @router.callback_query(F.data == "show_phone")
