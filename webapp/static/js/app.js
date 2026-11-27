@@ -112,6 +112,7 @@ async function initApp() {
     // Load admin data if admin
     if (state.isAdmin) {
       loadAdminOrders();
+      loadAdminAppointments();
       loadAdminStats();
       loadAdminPrices();
       loadAdminSlots();
@@ -553,6 +554,17 @@ async function loadSlotsForDate(dateStr) {
   }
 }
 
+// Booking purpose chips switcher
+document.querySelectorAll('#booking-purpose-chips .chip-btn').forEach(btn => {
+  btn.addEventListener('click', function () {
+    haptic('light');
+    document.querySelectorAll('#booking-purpose-chips .chip-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    const hiddenInput = document.getElementById('booking-purpose');
+    if (hiddenInput) hiddenInput.value = this.dataset.purpose;
+  });
+});
+
 document.getElementById('form-booking')?.addEventListener('submit', async e => {
   e.preventDefault();
   haptic('medium');
@@ -782,9 +794,10 @@ async function loadAdminOrders(status = 'all') {
         </div>
         <div class="order-actions-bar">
           <button class="btn-status-act" onclick="updateOrderStatus(${o.id}, 'in_progress')">⚙️ В работу</button>
-          <button class="btn-status-act ready-btn" onclick="updateOrderStatus(${o.id}, 'ready')">✅ Готово (в боксе)</button>
+          <button class="btn-status-act ready-btn" onclick="updateOrderStatus(${o.id}, 'ready')">✅ Готово</button>
           <button class="btn-status-act" onclick="updateOrderStatus(${o.id}, 'completed')">📦 Выдан</button>
           <button class="btn-status-act" onclick="updateOrderStatus(${o.id}, 'cancelled')">❌ Отменить</button>
+          <button class="btn-status-act" style="background:rgba(239,68,68,0.18);color:#EF4444;border-color:rgba(239,68,68,0.35);" onclick="deleteAdminOrder(${o.id})">🗑️ Удалить</button>
         </div>
       </div>
     `).join('');
@@ -829,14 +842,168 @@ window.updateOrderStatus = async function (orderId, newStatus) {
   }
 };
 
-// Admin Filters
-document.querySelectorAll('.admin-filter-chip').forEach(chip => {
+window.deleteAdminOrder = async function (orderId) {
+  if (!confirm('Вы уверены, что хотите удалить эту заявку на коврики?')) return;
+  haptic('medium');
+  try {
+    const res = await fetch(`/api/admin/orders/${orderId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-Telegram-User-Id': String(state.telegramUser?.id || 0),
+      },
+    });
+    const data = await res.json();
+    if (data.success) {
+      haptic('success');
+      showToast(data.message || 'Заявка успешно удалена');
+      loadAdminOrders(state.adminFilter);
+      loadAdminStats();
+    } else {
+      showToast('Ошибка удаления заявки');
+    }
+  } catch (err) {
+    showToast('Ошибка сети');
+  }
+};
+
+// Section switcher between Orders and Appointments in Admin Tab
+window.switchAdminSubTab = function (sec) {
+  haptic('selection');
+  const btnOrders = document.getElementById('btn-admin-sub-orders');
+  const btnApps = document.getElementById('btn-admin-sub-apps');
+  const secOrders = document.getElementById('admin-sec-orders');
+  const secApps = document.getElementById('admin-sec-appointments');
+
+  if (sec === 'orders') {
+    btnOrders?.classList.add('active');
+    btnApps?.classList.remove('active');
+    if (secOrders) secOrders.style.display = 'block';
+    if (secApps) secApps.style.display = 'none';
+  } else {
+    btnOrders?.classList.remove('active');
+    btnApps?.classList.add('active');
+    if (secOrders) secOrders.style.display = 'none';
+    if (secApps) secApps.style.display = 'block';
+    loadAdminAppointments(state.adminAppFilter || 'all');
+  }
+};
+
+// Admin Appointments Management
+async function loadAdminAppointments(purpose = 'all') {
+  const container = document.getElementById('admin-appointments-list');
+  if (!container) return;
+
+  container.innerHTML = '<div style="color:var(--text-sec);padding:10px;">Загрузка записей в бокс...</div>';
+
+  try {
+    const url = `/api/admin/appointments${purpose !== 'all' ? `?purpose=${encodeURIComponent(purpose)}` : ''}`;
+    const res = await fetch(url, {
+      headers: { 'X-Telegram-User-Id': String(state.telegramUser?.id || 0) },
+    });
+    if (!res.ok) {
+      container.innerHTML = '<div style="color:red;padding:10px;">Нет доступа</div>';
+      return;
+    }
+    const data = await res.json();
+    state.adminAppointments = data.appointments || [];
+
+    if (!data.appointments.length) {
+      container.innerHTML = '<div style="color:var(--text-dim);padding:20px;text-align:center;">Записей в этой категории нет</div>';
+      return;
+    }
+
+    container.innerHTML = data.appointments.map(a => `
+      <div class="order-admin-card" id="card-app-${a.id}">
+        <div class="order-admin-head">
+          <span class="order-num">📅 ${a.date} · ${a.time_slot}</span>
+          <span class="status-pill status-${a.status}">${a.status === 'confirmed' ? 'Подтверждена' : a.status === 'cancelled' ? 'Отменена' : a.status}</span>
+        </div>
+        <div style="margin: 6px 0; font-size:13px; font-weight:700; color:#A78BFA;">
+          🎯 ${a.purpose}
+        </div>
+        <div class="order-client-row">Клиент: <b>${a.user_name}</b> · <a href="tel:${a.phone}" style="color:#60A5FA;text-decoration:none;">${a.phone}</a></div>
+        <div class="order-car-row">🚗 ${a.car_info}</div>
+        ${a.comment ? `<div style="font-size:12px;color:var(--text-sec);margin-top:4px;">💬 ${a.comment}</div>` : ''}
+        <div class="order-actions-bar" style="margin-top:10px;">
+          <button class="btn-status-act ready-btn" onclick="updateAppStatus(${a.id}, 'confirmed')">✅ Подтвердить</button>
+          <button class="btn-status-act" onclick="updateAppStatus(${a.id}, 'cancelled')">❌ Отменить</button>
+          <button class="btn-status-act" style="background:rgba(239,68,68,0.18);color:#EF4444;border-color:rgba(239,68,68,0.35);" onclick="deleteAdminAppointment(${a.id})">🗑️ Удалить</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    container.innerHTML = '<div style="color:red;padding:10px;">Ошибка загрузки записей</div>';
+  }
+}
+
+window.deleteAdminAppointment = async function (appId) {
+  if (!confirm('Вы уверены, что хотите удалить эту запись в бокс?')) return;
+  haptic('medium');
+  try {
+    const res = await fetch(`/api/admin/appointments/${appId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-Telegram-User-Id': String(state.telegramUser?.id || 0),
+      },
+    });
+    const data = await res.json();
+    if (data.success) {
+      haptic('success');
+      showToast('Запись успешно удалена');
+      loadAdminAppointments(state.adminAppFilter || 'all');
+      loadAdminStats();
+    } else {
+      showToast('Ошибка удаления');
+    }
+  } catch (err) {
+    showToast('Ошибка сети');
+  }
+};
+
+window.updateAppStatus = async function (appId, status) {
+  haptic('medium');
+  try {
+    const res = await fetch(`/api/admin/appointments/${appId}/status`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Telegram-User-Id': String(state.telegramUser?.id || 0),
+      },
+      body: JSON.stringify({ status: status }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      haptic('success');
+      showToast(data.message || 'Статус записи обновлен');
+      loadAdminAppointments(state.adminAppFilter || 'all');
+      loadAdminStats();
+    } else {
+      showToast('Ошибка обновления статуса');
+    }
+  } catch (err) {
+    showToast('Ошибка сети');
+  }
+};
+
+// Admin Filters for Orders
+document.querySelectorAll('#orders-filter-bar .admin-filter-chip').forEach(chip => {
   chip.addEventListener('click', () => {
     haptic('light');
-    document.querySelectorAll('.admin-filter-chip').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('#orders-filter-bar .admin-filter-chip').forEach(c => c.classList.remove('active'));
     chip.classList.add('active');
     state.adminFilter = chip.dataset.status;
     loadAdminOrders(state.adminFilter);
+  });
+});
+
+// Admin Filters for Appointments (Замер / Установка / Консультация)
+document.querySelectorAll('#apps-filter-bar .admin-filter-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    haptic('light');
+    document.querySelectorAll('#apps-filter-bar .admin-filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    state.adminAppFilter = chip.dataset.purpose;
+    loadAdminAppointments(state.adminAppFilter);
   });
 });
 

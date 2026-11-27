@@ -66,14 +66,63 @@ async def update_order_status(
         "order": order_dict,
     }
 
-@router.get("/appointments")
-async def list_admin_appointments(
+@router.delete("/orders/{order_id}")
+async def delete_order(
+    order_id: int,
     db: AsyncSession = Depends(get_db),
     admin_id: int = Depends(verify_admin),
 ):
-    stmt = select(Appointment).order_by(Appointment.date.desc(), Appointment.time_slot.asc()).limit(100)
+    order = await db.get(Order, order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Заказ не найден")
+    await db.delete(order)
+    await db.commit()
+    return {"success": True, "message": f"Заказ {order.order_number} удалён"}
+
+@router.get("/appointments")
+async def list_admin_appointments(
+    purpose: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db),
+    admin_id: int = Depends(verify_admin),
+):
+    stmt = select(Appointment).order_by(Appointment.date.desc(), Appointment.time_slot.asc()).limit(150)
+    if purpose and purpose != "all":
+        # match substring: "замер", "установка", "консультация"
+        stmt = stmt.where(Appointment.purpose.ilike(f"%{purpose}%"))
+    if status and status != "all":
+        stmt = stmt.where(Appointment.status == status)
+
     apps = (await db.execute(stmt)).scalars().all()
     return {"appointments": [a.to_dict() for a in apps]}
+
+@router.delete("/appointments/{appointment_id}")
+async def delete_appointment(
+    appointment_id: int,
+    db: AsyncSession = Depends(get_db),
+    admin_id: int = Depends(verify_admin),
+):
+    app = await db.get(Appointment, appointment_id)
+    if not app:
+        raise HTTPException(status_code=404, detail="Запись не найдена")
+    await db.delete(app)
+    await db.commit()
+    return {"success": True, "message": "Запись удалена"}
+
+@router.post("/appointments/{appointment_id}/status")
+async def update_appointment_status(
+    appointment_id: int,
+    payload: OrderStatusUpdateSchema,
+    db: AsyncSession = Depends(get_db),
+    admin_id: int = Depends(verify_admin),
+):
+    app = await db.get(Appointment, appointment_id)
+    if not app:
+        raise HTTPException(status_code=404, detail="Запись не найдена")
+    app.status = payload.status
+    await db.commit()
+    return {"success": True, "message": f"Статус записи обновлен: {payload.status}"}
+
 
 @router.get("/slots")
 async def get_all_slots(
