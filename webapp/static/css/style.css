@@ -601,13 +601,22 @@ html, body {
 }
 .example-img-wrap {
   width: 100%;
-  height: 160px;
+  height: 190px;
   background: linear-gradient(135deg, #1f222b, #121316);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
+}
+.example-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+.example-img-wrap:hover img {
+  transform: scale(1.03);
 }
 .example-badge {
   position: absolute;

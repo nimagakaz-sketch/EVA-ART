@@ -194,3 +194,35 @@ class TimeSlot(Base):
             "is_active": self.is_active,
             "order_num": self.order_num,
         }
+
+
+class WorkExample(Base):
+    __tablename__ = "work_examples"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    car_name = Column(String(128), nullable=False)
+    badge = Column(String(64), nullable=True) # e.g. "Хит сезона"
+    description = Column(Text, nullable=False)
+    image_url = Column(String(512), nullable=False)
+    mat_color = Column(String(32), default="black")
+    edge_color = Column(String(32), default="red")
+    cell_type = Column(String(16), default="romb")
+    is_active = Column(Boolean, default=True)
+    order_num = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "car_name": self.car_name,
+            "badge": self.badge,
+            "description": self.description,
+            "image_url": self.image_url,
+            "mat_color": self.mat_color,
+            "edge_color": self.edge_color,
+            "cell_type": self.cell_type,
+            "is_active": self.is_active,
+            "order_num": self.order_num,
+            "created_at": self.created_at.strftime("%d.%m.%Y") if self.created_at else "",
+        }
+

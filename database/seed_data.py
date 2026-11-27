@@ -1,7 +1,7 @@
 import logging
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.models import PriceConfig, Pattern, FAQ, TimeSlot
+from database.models import PriceConfig, Pattern, FAQ, TimeSlot, WorkExample
 
 logger = logging.getLogger(__name__)
 
@@ -212,6 +212,39 @@ DEFAULT_FAQ = [
     },
 ]
 
+DEFAULT_EXAMPLES = [
+    {
+        "car_name": "Toyota Camry XV70",
+        "badge": "Хит сезона",
+        "description": "Чёрный ромб + Ярко-красный кант, металлический подпятник с резиновыми вставками, 3D формовка с бортами.",
+        "image_url": "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=600&auto=format&fit=crop&q=80",
+        "mat_color": "black",
+        "edge_color": "red",
+        "cell_type": "romb",
+        "order_num": 0,
+    },
+    {
+        "car_name": "Haval Jolion 4WD",
+        "badge": "Топ для кроссоверов",
+        "description": "Графит сота + Серый кант, усиленный полимерный подпятник, точные лекала с перекрытием ковролина.",
+        "image_url": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=600&auto=format&fit=crop&q=80",
+        "mat_color": "graphite",
+        "edge_color": "gray",
+        "cell_type": "sota",
+        "order_num": 1,
+    },
+    {
+        "car_name": "Lada Vesta NG",
+        "badge": "Строгая классика",
+        "description": "Чёрный ромб + Синий кант, оригинальные штатные клипсы, металлический подпятник.",
+        "image_url": "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=600&auto=format&fit=crop&q=80",
+        "mat_color": "black",
+        "edge_color": "blue",
+        "cell_type": "romb",
+        "order_num": 2,
+    },
+]
+
 async def seed_initial_data(session: AsyncSession):
     # 1. Seed prices
     for item in DEFAULT_PRICES:
@@ -247,6 +280,14 @@ async def seed_initial_data(session: AsyncSession):
         if not res.scalar_one_or_none():
             slot_obj = TimeSlot(slot=slot_str, is_active=True, order_num=idx)
             session.add(slot_obj)
+
+    # 5. Seed Initial Examples
+    for item in DEFAULT_EXAMPLES:
+        stmt = select(WorkExample).where(WorkExample.car_name == item["car_name"])
+        res = await session.execute(stmt)
+        if not res.scalar_one_or_none():
+            ex_obj = WorkExample(**item)
+            session.add(ex_obj)
 
     await session.commit()
     logger.info("Default seed data successfully populated.")

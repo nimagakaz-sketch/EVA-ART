@@ -30,8 +30,12 @@ services:
       - .env
     environment:
       - DB_HOST=127.0.0.1
+    volumes:
+      - uploads_data:/app/webapp/static/uploads
     network_mode: "host"
 
 volumes:
   postgres_data:
     name: eva_art_postgres_data
+  uploads_data:
+    name: eva_art_uploads_data

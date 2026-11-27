@@ -4,6 +4,7 @@ from api.routes_patterns import router as patterns_router
 from api.routes_orders import router as orders_router
 from api.routes_appointments import router as appointments_router
 from api.routes_admin import router as admin_router
+from api.routes_examples import router as examples_router
 
 api_router = APIRouter(prefix="/api")
 
@@ -12,5 +13,6 @@ api_router.include_router(patterns_router)
 api_router.include_router(orders_router)
 api_router.include_router(appointments_router)
 api_router.include_router(admin_router)
+api_router.include_router(examples_router)
 
 __all__ = ["api_router"]

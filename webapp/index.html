@@ -346,52 +346,9 @@
         <p class="brand-slogan">Готовые работы мастерской и ответы на частые вопросы</p>
       </div>
 
-      <div style="margin-bottom:12px;font-size:16px;font-weight:700;">Популярные сочетания:</div>
-      <div class="gallery-grid">
-        <!-- Card 1 -->
-        <div class="example-card">
-          <div class="example-img-wrap">
-            <span class="example-badge">Хит сезона</span>
-            <div style="font-size:32px;">🚗</div>
-          </div>
-          <div class="example-body">
-            <div class="example-car">Toyota Camry XV70</div>
-            <div class="example-details">Чёрный ромб + Ярко-красный кант, металлический подпятник, 3D формовка с бортами.</div>
-            <button class="btn-copy-config" data-make="Toyota" data-model="Camry" data-mat="black" data-edge="red" data-cell="romb" data-heel="metal" data-has3d="true">
-              ✨ Хочу так же!
-            </button>
-          </div>
-        </div>
-
-        <!-- Card 2 -->
-        <div class="example-card">
-          <div class="example-img-wrap">
-            <span class="example-badge">Топ для кроссоверов</span>
-            <div style="font-size:32px;">🚙</div>
-          </div>
-          <div class="example-body">
-            <div class="example-car">Haval Jolion 4WD</div>
-            <div class="example-details">Графит сота + Серый кант, полимерный подпятник, точные лекала с перекрытием ковролина.</div>
-            <button class="btn-copy-config" data-make="Haval" data-model="Jolion" data-mat="graphite" data-edge="gray" data-cell="sota" data-heel="polymer" data-has3d="false">
-              ✨ Хочу так же!
-            </button>
-          </div>
-        </div>
-
-        <!-- Card 3 -->
-        <div class="example-card">
-          <div class="example-img-wrap">
-            <span class="example-badge">Строгая классика</span>
-            <div style="font-size:32px;">🏎</div>
-          </div>
-          <div class="example-body">
-            <div class="example-car">Lada Vesta NG</div>
-            <div class="example-details">Чёрный ромб + Синий кант, оригинальные штатные клипсы, металлический подпятник.</div>
-            <button class="btn-copy-config" data-make="Lada" data-model="Vesta" data-mat="black" data-edge="blue" data-cell="romb" data-heel="metal" data-has3d="true">
-              ✨ Хочу так же!
-            </button>
-          </div>
-        </div>
+      <div style="margin-bottom:12px;font-size:16px;font-weight:700;">Реальные примеры работ EVA-ART:</div>
+      <div class="gallery-grid" id="examples-gallery-grid">
+        <div style="color:var(--text-sec);padding:10px;">Загрузка примеров...</div>
       </div>
 
       <div style="margin:24px 0 12px;font-size:16px;font-weight:700;">Частые вопросы (FAQ):</div>
@@ -509,6 +466,65 @@
             <input type="text" id="slot-time" class="input-text" placeholder="Время (напр. 11:00)" style="flex:2;" required pattern="^\d{1,2}:\d{2}$">
             <button type="submit" class="btn-order-main" style="flex:1;padding:10px;font-size:13px;">+ Добавить</button>
           </form>
+        </div>
+      </div>
+
+      <!-- Manage Examples Tool -->
+      <div class="scard" style="margin-top:20px;">
+        <div class="schd"><span class="schd-title">📸 Управление примерами работ</span></div>
+        <div class="scb">
+          <form id="form-add-example" enctype="multipart/form-data">
+            <div class="form-group">
+              <label class="form-label">Марка и модель авто</label>
+              <input type="text" id="ex-car-name" class="input-text" placeholder="например: BMW X5 (G05)" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Бейдж / Метка (необязательно)</label>
+              <input type="text" id="ex-badge" class="input-text" placeholder="например: Хит сезона, Премиум 3D, Индивидуальный пошив">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Описание выполненной работы</label>
+              <textarea id="ex-desc" class="input-text" style="height:70px;resize:none;" placeholder="например: Чёрный ромб + ярко-красный кант, металлический подпятник с резиновыми вставками, комплект в салон" required></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Загрузить фото работы</label>
+              <input type="file" id="ex-file" class="input-text" accept="image/*" style="padding:8px;">
+              <div style="font-size:11px;color:var(--text-sec);margin-top:4px;">Или ссылка на фото (если фото уже в интернете):</div>
+              <input type="url" id="ex-url" class="input-text" placeholder="https://..." style="margin-top:4px;">
+            </div>
+            <div class="input-row" style="margin-top:10px;">
+              <div class="form-group" style="flex:1;">
+                <label class="form-label">Цвет коврика</label>
+                <select id="ex-mat" class="select-input">
+                  <option value="black">Чёрный</option>
+                  <option value="graphite">Графит</option>
+                  <option value="gray">Серый</option>
+                  <option value="beige">Бежевый</option>
+                  <option value="brown">Коричневый</option>
+                  <option value="blue">Синий</option>
+                  <option value="red">Красный</option>
+                </select>
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label class="form-label">Цвет канта</label>
+                <select id="ex-edge" class="select-input">
+                  <option value="red">Красный</option>
+                  <option value="black">Чёрный</option>
+                  <option value="blue">Синий</option>
+                  <option value="gray">Серый</option>
+                  <option value="purple">Фиолетовый</option>
+                  <option value="orange">Оранжевый</option>
+                  <option value="yellow">Жёлтый</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn-order-main btn-block" id="btn-submit-example" style="margin-top:14px;padding:12px;">
+              + Опубликовать пример работы
+            </button>
+          </form>
+
+          <div style="font-size:13px;font-weight:700;color:var(--text-sec);margin-top:20px;margin-bottom:8px;">Опубликованные примеры:</div>
+          <div id="admin-examples-list" style="display:flex;flex-direction:column;gap:10px;"></div>
         </div>
       </div>
 

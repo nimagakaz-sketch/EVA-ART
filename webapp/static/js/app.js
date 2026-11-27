@@ -104,6 +104,7 @@ async function initApp() {
     initBookingDates();
     checkPattern();
     calculatePrice();
+    loadExamples();
 
     // Initialize Liquid Glass TabBar
     window.initLiquidGlassTabBar();
@@ -114,6 +115,7 @@ async function initApp() {
       loadAdminStats();
       loadAdminPrices();
       loadAdminSlots();
+      loadAdminExamples();
     }
   } catch (err) {
     console.error('App init error:', err);
@@ -603,72 +605,99 @@ document.getElementById('form-booking')?.addEventListener('submit', async e => {
 });
 
 // ==========================================
-// 7. EXAMPLES GALLERY "ХОЧУ ТАК ЖЕ!"
+// 7. EXAMPLES GALLERY "ХОЧУ ТАК ЖЕ!" (DYNAMIC)
 // ==========================================
-document.querySelectorAll('.btn-copy-config').forEach(btn => {
-  btn.addEventListener('click', function () {
-    haptic('medium');
-    const make = this.dataset.make;
-    const model = this.dataset.model;
-    const matColorId = this.dataset.mat;
-    const edgeColorId = this.dataset.edge;
-    const cellType = this.dataset.cell;
-    const heel = this.dataset.heel;
-    const has3d = this.dataset.has3d === 'true';
+async function loadExamples() {
+  const container = document.getElementById('examples-gallery-grid');
+  if (!container) return;
 
-    // Set car
-    if (makeInput) makeInput.value = make;
-    if (modelInput) modelInput.value = model;
-    state.carMake = make;
-    state.carModel = model;
+  try {
+    const res = await fetch('/api/examples');
+    if (!res.ok) return;
+    const data = await res.json();
+    const items = data.examples || [];
 
-    // Set cell type
-    state.cellType = cellType;
-    document.querySelectorAll('.seg-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.cell === cellType);
-    });
+    if (!items.length) {
+      container.innerHTML = '<div style="color:var(--text-sec);padding:20px;text-align:center;">Примеры работ скоро появятся</div>';
+      return;
+    }
 
-    // Set mat color
-    const foundMat = state.config?.colors_mat.find(c => c.id === matColorId);
-    if (foundMat) {
-      state.matColor = foundMat;
-      document.getElementById('current-mat-color').textContent = foundMat.name;
-      document.querySelectorAll('#mat-colors .color-swatch').forEach(s => {
-        s.classList.toggle('active', s.dataset.id === matColorId);
+    container.innerHTML = items.map(item => `
+      <div class="example-card">
+        <div class="example-img-wrap">
+          ${item.badge ? `<span class="example-badge">${item.badge}</span>` : ''}
+          <img src="${item.image_url}" alt="${item.car_name}" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=600&auto=format&fit=crop&q=80';">
+        </div>
+        <div class="example-body">
+          <div class="example-car">${item.car_name}</div>
+          <div class="example-details">${item.description}</div>
+          <button class="btn-copy-config" 
+                  data-car="${item.car_name}" 
+                  data-mat="${item.mat_color || 'black'}" 
+                  data-edge="${item.edge_color || 'red'}" 
+                  data-cell="${item.cell_type || 'romb'}">
+            ✨ Хочу так же!
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    // Attach click events to "Хочу так же!"
+    container.querySelectorAll('.btn-copy-config').forEach(btn => {
+      btn.addEventListener('click', function () {
+        haptic('medium');
+        const carStr = this.dataset.car || '';
+        const matColorId = this.dataset.mat || 'black';
+        const edgeColorId = this.dataset.edge || 'red';
+        const cellType = this.dataset.cell || 'romb';
+
+        const parts = carStr.split(' ');
+        const make = parts[0] || 'EVA-ART';
+        const model = parts.slice(1).join(' ') || '';
+
+        if (makeInput) makeInput.value = make;
+        if (modelInput) modelInput.value = model;
+        state.carMake = make;
+        state.carModel = model;
+
+        state.cellType = cellType;
+        document.querySelectorAll('.seg-btn').forEach(b => {
+          b.classList.toggle('active', b.dataset.cell === cellType);
+        });
+
+        const foundMat = state.config?.colors_mat.find(c => c.id === matColorId);
+        if (foundMat) {
+          state.matColor = foundMat;
+          document.getElementById('current-mat-color').textContent = foundMat.name;
+          document.querySelectorAll('#mat-colors .color-swatch').forEach(s => {
+            s.classList.toggle('active', s.dataset.id === matColorId);
+          });
+        }
+
+        const foundEdge = state.config?.colors_edge.find(c => c.id === edgeColorId);
+        if (foundEdge) {
+          state.edgeColor = foundEdge;
+          document.getElementById('current-edge-color').textContent = foundEdge.name;
+          document.querySelectorAll('#edge-colors .color-swatch').forEach(s => {
+            s.classList.toggle('active', s.dataset.id === edgeColorId);
+          });
+        }
+
+        calculatePrice();
+        updateMatSvgPreview();
+        checkPattern();
+
+        if (window.switchTabTo) {
+          window.switchTabTo(0);
+        }
+        showToast(`Применена конфигурация для ${carStr}!`);
       });
-    }
-
-    // Set edge color
-    const foundEdge = state.config?.colors_edge.find(c => c.id === edgeColorId);
-    if (foundEdge) {
-      state.edgeColor = foundEdge;
-      document.getElementById('current-edge-color').textContent = foundEdge.name;
-      document.querySelectorAll('#edge-colors .color-swatch').forEach(s => {
-        s.classList.toggle('active', s.dataset.id === edgeColorId);
-      });
-    }
-
-    // Set heel pad
-    state.heelPad = heel;
-    document.querySelectorAll('#heel-chips .chip-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.heel === heel);
     });
-
-    // Set 3D borders
-    state.has3dBorders = has3d;
-    document.getElementById('opt-3d')?.classList.toggle('selected', has3d);
-
-    calculatePrice();
-    updateMatSvgPreview();
-    checkPattern();
-
-    // Switch to tab 0 (Calculator)
-    if (window.switchTabTo) {
-      window.switchTabTo(0);
-    }
-    showToast(`Применена конфигурация для ${make} ${model}!`);
-  });
-});
+  } catch (err) {
+    console.error('Failed to load examples:', err);
+    container.innerHTML = '<div style="color:red;padding:10px;">Ошибка загрузки примеров</div>';
+  }
+}
 
 // ==========================================
 // 8. FAQ ACCORDION
@@ -931,7 +960,7 @@ async function loadAdminSlots() {
     container.innerHTML = data.slots.map(s => `
       <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:10px;background:${s.is_active ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.05)'};border:1px solid ${s.is_active ? 'rgba(124,58,237,0.5)' : 'rgba(255,255,255,0.1)'};">
         <span onclick="toggleAdminSlot(${s.id})" style="cursor:pointer;font-weight:700;font-size:13px;color:${s.is_active ? '#A78BFA' : 'var(--text-dim)'};text-decoration:${s.is_active ? 'none' : 'line-through'};">
-          ${s.slot_time} ${s.is_active ? '✓' : '✗'}
+          ${s.slot || s.slot_time} ${s.is_active ? '✓' : '✗'}
         </span>
         <button onclick="deleteAdminSlot(${s.id})" style="background:none;border:none;color:#EF4444;cursor:pointer;font-size:13px;padding:0 2px;">✕</button>
       </div>
@@ -1004,6 +1033,130 @@ document.getElementById('form-add-slot')?.addEventListener('submit', async e => 
     }
   } catch (err) {
     showToast('Ошибка добавления');
+  }
+});
+
+// Admin Examples Management
+async function loadAdminExamples() {
+  const container = document.getElementById('admin-examples-list');
+  if (!container) return;
+
+  try {
+    const res = await fetch('/api/examples');
+    if (!res.ok) return;
+    const data = await res.json();
+    const items = data.examples || [];
+
+    if (!items.length) {
+      container.innerHTML = '<span style="color:var(--text-dim);font-size:13px;">Примеров пока нет</span>';
+      return;
+    }
+
+    container.innerHTML = items.map(ex => `
+      <div style="display:flex;gap:12px;align-items:center;background:rgba(255,255,255,0.03);padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);">
+        <img src="${ex.image_url}" alt="${ex.car_name}" style="width:55px;height:55px;object-fit:cover;border-radius:8px;background:#222;" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=600&auto=format&fit=crop&q=80';">
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${ex.car_name}</div>
+          <div style="font-size:12px;color:var(--text-sec);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${ex.description}</div>
+          ${ex.badge ? `<span style="font-size:10px;background:rgba(124,58,237,0.25);color:#A78BFA;padding:2px 6px;border-radius:4px;display:inline-block;margin-top:2px;">${ex.badge}</span>` : ''}
+        </div>
+        <button class="btn-status-act" style="background:rgba(239,68,68,0.2);color:#EF4444;border-color:rgba(239,68,68,0.3);padding:6px 10px;font-size:13px;" onclick="deleteAdminExample(${ex.id})">
+          🗑️
+        </button>
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error('Error loading admin examples:', err);
+  }
+}
+
+window.deleteAdminExample = async function(id) {
+  if (!confirm('Удалить этот пример работы из галереи?')) return;
+  haptic('medium');
+  try {
+    const res = await fetch(`/api/examples/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'X-Telegram-User-Id': String(state.telegramUser?.id || 0),
+      },
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Пример работы удален');
+      loadAdminExamples();
+      loadExamples();
+    } else {
+      showToast('Ошибка удаления');
+    }
+  } catch (err) {
+    showToast('Ошибка сети');
+  }
+};
+
+document.getElementById('form-add-example')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  haptic('medium');
+
+  const carName = document.getElementById('ex-car-name').value.trim();
+  const desc = document.getElementById('ex-desc').value.trim();
+  const badge = document.getElementById('ex-badge').value.trim();
+  const fileInput = document.getElementById('ex-file');
+  const urlInput = document.getElementById('ex-url').value.trim();
+  const mat = document.getElementById('ex-mat').value;
+  const edge = document.getElementById('ex-edge').value;
+
+  if (!carName || !desc) {
+    showToast('Заполните марку/модель авто и описание');
+    return;
+  }
+
+  const submitBtn = document.getElementById('btn-submit-example');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Публикация...';
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('car_name', carName);
+    formData.append('description', desc);
+    if (badge) formData.append('badge', badge);
+    formData.append('mat_color', mat);
+    formData.append('edge_color', edge);
+    formData.append('cell_type', 'romb');
+
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+      formData.append('image_file', fileInput.files[0]);
+    }
+    if (urlInput) {
+      formData.append('image_url', urlInput);
+    }
+
+    const res = await fetch('/api/examples', {
+      method: 'POST',
+      headers: {
+        'X-Telegram-User-Id': String(state.telegramUser?.id || 0),
+      },
+      body: formData,
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      haptic('success');
+      showToast(`Пример для ${carName} успешно опубликован!`);
+      document.getElementById('form-add-example').reset();
+      loadAdminExamples();
+      loadExamples();
+    } else {
+      showToast(data.detail || 'Ошибка публикации');
+    }
+  } catch (err) {
+    showToast('Ошибка сети при загрузке фото');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = '+ Опубликовать пример работы';
+    }
   }
 });
 
