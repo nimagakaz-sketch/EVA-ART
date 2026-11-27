@@ -354,21 +354,21 @@ function updateMatSvgPreview() {
 // ==========================================
 function getPriceByCode(itemKey, defaultVal) {
   if (state.config && state.config.prices) {
-    const p = state.config.prices.find(x => x.item_key === itemKey);
+    const p = state.config.prices.find(x => x.key === itemKey || x.item_key === itemKey);
     if (p && p.price !== undefined) return p.price;
   }
   return defaultVal;
 }
 
 function calculatePrice() {
-  let price = getPriceByCode('standard_salon', 2800);
+  let price = getPriceByCode('package_standard', 2800);
 
-  if (state.has3dBorders) price += getPriceByCode('3d_borders', 1200);
-  if (state.hasTrunk) price += getPriceByCode('trunk', 2000);
-  if (state.heelPad === 'metal') price += getPriceByCode('metal_heel', 700);
-  if (state.heelPad === 'polymer') price += getPriceByCode('polymer_heel', 400);
-  if (state.badgesCount === 2) price += getPriceByCode('badge_pair', 500);
-  if (state.badgesCount === 4) price += getPriceByCode('badge_four', 900);
+  if (state.has3dBorders) price += getPriceByCode('addon_3d_borders', 1200);
+  if (state.hasTrunk) price += getPriceByCode('addon_trunk', 2000);
+  if (state.heelPad === 'metal') price += getPriceByCode('heel_pad_metal', 700);
+  if (state.heelPad === 'polymer') price += getPriceByCode('heel_pad_polymer', 400);
+  if (state.badgesCount === 2) price += getPriceByCode('badge_pair_2', 500);
+  if (state.badgesCount === 4) price += getPriceByCode('badge_pair_4', 900);
 
   state.totalPrice = price;
   const priceDisplay = document.getElementById('price-total-display');
