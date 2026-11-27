@@ -1,6 +1,6 @@
 import logging
 from aiogram import Router, F
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart, Command
 from sqlalchemy import select
 from bot.keyboards import get_main_reply_keyboard, get_start_inline_keyboard
@@ -41,15 +41,30 @@ CONTACTS_TEXT = (
 
 @router.message(CommandStart())
 async def cmd_start(message: Message):
-    await message.answer(
-        text=WELCOME_TEXT,
-        reply_markup=get_start_inline_keyboard(),
+    logger.info(f"Received /start command from user {message.from_user.id if message.from_user else 'unknown'}")
+    try:
+        await message.answer(
+            text=WELCOME_TEXT,
+            reply_markup=get_start_inline_keyboard(),
+        )
+        # Also ensure the persistent reply keyboard is sent
+        await message.answer(
+            text="Используйте меню внизу для быстрого доступа к конфигуратору и контактам:",
+            reply_markup=get_main_reply_keyboard(),
+        )
+    except Exception as e:
+        logger.error(f"Error in cmd_start: {e}", exc_info=True)
+
+@router.callback_query(F.data == "show_phone")
+async def cb_show_phone(call: CallbackQuery):
+    await call.message.answer(
+        "📞 <b>Прямой контакт мастера EVA-ART:</b>\n\n"
+        "Телефон: <a href='tel:+79512229999'>+7 951 222 9999</a>\n"
+        "Telegram: @youngyannniii\n\n"
+        "г. Кемерово, ул. Карболитовская, д. 12, бокс №3 (въезд в арку)."
     )
-    # Also ensure the persistent reply keyboard is sent
-    await message.answer(
-        text="Используйте меню внизу для быстрого доступа к конфигуратору и контактам:",
-        reply_markup=get_main_reply_keyboard(),
-    )
+    await call.answer()
+
 
 @router.message(F.text == "📍 Адрес и как проехать")
 async def show_contacts(message: Message):

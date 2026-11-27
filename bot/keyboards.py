@@ -54,9 +54,13 @@ def get_start_inline_keyboard() -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(
-                text="📞 Позвонить мастеру",
-                url=settings.PHONE_TEL,
-            )
+                text="💬 Написать мастеру в TG",
+                url="https://t.me/youngyannniii",
+            ),
+            InlineKeyboardButton(
+                text="📞 Телефон",
+                callback_data="show_phone",
+            ),
         ],
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
